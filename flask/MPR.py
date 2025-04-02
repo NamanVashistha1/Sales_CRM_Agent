@@ -22,7 +22,7 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
 weekly_sales = []
 monthly_sales = []
 yearly_sales = []
-csv_file = r"C:\Users\Harsh Pawar\Desktop\projects\Agentic AI MPR8\Online Sales Data.csv"
+csv_file = r"flask\Online Sales Data.csv"
 def import_csv_to_mysql(csv_file):
     """
     Imports a CSV file into a MySQL table.

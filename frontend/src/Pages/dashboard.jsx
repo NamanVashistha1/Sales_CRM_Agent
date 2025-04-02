@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import axios from "axios";
 
 // Register Chart.js components
 ChartJS.register(
@@ -40,8 +41,78 @@ const CRMDashboard = () => {
     { id: 3, text: "Sales target achieved for Q1", time: "Yesterday", isRead: true },
     { id: 4, text: "New feature update available", time: "2 days ago", isRead: true }
   ]);
-
+    const [query, setQuery] = useState("");
+    const [response, setResponse] = useState("");
+  
+    const handleSend = async () => {
+      if (!query) return;
+      console.log("handleSend",query)
+      try {
+        const res = await axios.post("http://localhost:5000/generate", { query });
+        setResponse(res.data.response);
+      } catch (error) {
+        console.error("Error fetching response:", error);
+        setResponse("Error occurred!");
+      }
+    }
   // Sample data for charts
+  const data = {
+    "Notifications" : 
+    [
+      {
+        "id": 52126,
+        "notification": "Hi! \ud83d\udc4b Enjoy 15% off on your next Fashion purchase. Use code FASHION15 at checkout. Thanks for shopping with us!"
+      },
+      {
+        "id": 50959,
+        "notification": "Hello! We see you love Mobile phones. Get \u20b950 cashback on your next Mobile purchase. Shop now!"
+      },
+      {
+        "id": 55217,
+        "notification": "Hi! Enjoy 10% off on your next Mobile Phone purchase. We appreciate your continued support!"
+      },
+      {
+        "id": 54378,
+        "notification": "Hi! We noticed you like Mobile Phones. Here's a special offer: \u20b975 cashback on your next order. Shop now!"
+      },
+      {
+        "id": 50933,
+        "notification": "Hello! Laptops & Accessories are now at discounted prices! Get an extra 10% off with code LAPTOP10. Shop today!"
+      },
+      {
+        "id": 52827,
+        "notification": "We value your feedback! As a valued customer, get an exclusive 20% discount on your next Fashion order. Use code THANKYOU20."
+      },
+      {
+        "id": 50438,
+        "notification": "We apologize for any inconvenience! Enjoy a special \u20b9100 discount on your next Mobile order. Use code SORRY100."
+      },
+      {
+        "id": 52009,
+        "notification": "We are sorry to hear that your experience was not satisfactory. Get \u20b925 cashback on your next mobile order. We hope to see you soon!"
+      },
+      {
+        "id": 54497,
+        "notification": "We value your feedback! As a valued customer, get an exclusive 15% discount on your next Mobile Phone order. Use code VALUED15."
+      },
+      {
+        "id": 50355,
+        "notification": "We apologize for any inconvenience! Enjoy a special \u20b950 discount on your next Mobile order. Use code APOLOGY50."
+      }
+    ],
+  };
+  useEffect(() => {
+    // Transform data to required format
+    const formattedNotifications = data.Notifications.map((item, index) => ({
+      id: item.id,
+      text: item.notification,
+      time: index === 0 ? "Just now" : `${index * 10} mins ago`,
+      isRead: false
+    }));
+
+    setNotifications(formattedNotifications);
+  }, []);
+  
   const salesData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
@@ -214,7 +285,7 @@ const CRMDashboard = () => {
                         >
                           <div className="d-flex justify-content-between">
                             <span>{notification.text}</span>
-                            {!notification.isRead && <span className="badge bg-primary">New</span>}
+                            {!notification.isRead && <span className="badge bg-primary"style={{height:'fit-content'}}>New</span>}
                           </div>
                           <small className="text-muted">{notification.time}</small>
                         </div>
@@ -389,7 +460,7 @@ const CRMDashboard = () => {
                   ))}
                 </div>
                 <div className="card-footer p-2">
-                  <form onSubmit={handleSendMessage}>
+                  <form onSubmit={handleSend}>
                     <div className="input-group">
                       <input
                         type="text"
@@ -398,7 +469,9 @@ const CRMDashboard = () => {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                       />
-                      <button className="btn btn-primary" type="submit">
+                      <button className="btn btn-primary" type="submit" onClick={()=>{
+                        setQuery(newMessage)
+                      }}>
                         <i className="bi bi-send"></i>
                       </button>
                     </div>
