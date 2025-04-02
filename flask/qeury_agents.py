@@ -5,7 +5,9 @@ from langchain.agents import AgentExecutor, Tool, create_openai_functions_agent
 from langchain.schema import SystemMessage, HumanMessage
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-import psycopg2
+# import psycopg2
+import mysql.connector
+
 
 load_dotenv()
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -23,12 +25,13 @@ llm = ChatGoogleGenerativeAI(
 # )
 
 
-DB_NAME = 'mydatabase'
-DB_USER = 'postgres'
-DB_PASSWORD = '1234'
-DB_HOST = 'localhost'
-DB_PORT = '5432'
-
+db_config = {
+            "host": os.getenv("MYSQL_HOST"),
+            "user": os.getenv("MYSQL_USER"),
+            "password": os.getenv("MYSQL_PASSWORD"),
+            "database": os.getenv("MYSQL_DATABASE"),
+            "auth_plugin":'mysql_native_password' 
+        }
 def generate_sql(query: str) -> str:
     """Generates an SQL query based on the user's request."""
     messages = [
@@ -37,20 +40,13 @@ def generate_sql(query: str) -> str:
         Generate an optimized SQL query for the following request:
         "{query}"
 
-        Use the following schema for PostgresSql Database:
+        Use the following schema for SQL Database:
 
-        - customers (customer_id, first_name, last_name, email, phone)
-        - products (product_id, transaction_id, date, product_category, product_name, units_sold, unit_price, total_revenue, region, payment_method)
-        - sales (sale_id, customer_id, product_id, amount, sale_date)
-
-        Relationships:
-        - sales.customer_id -> customers.customer_id
-        - sales.product_id -> products.product_id
+        - sales_data (Transaction ID, Date, Product Category, Product Name, Units Sold, Unit Price, Total Revenue, Region, Payment Method)
 
         Query Requirements:
         - If retrieving data from a single table, include **all columns** from that table.
-        - Always include `customers.first_name` and `customers.last_name` for customer-related queries.
-        - Always include `products.name`, `products.price`, and `products.category` for product-related queries.
+        - Always include `Product Category`, `Product Name`, `Units Sold` for product-related queries.
         - Ensure the SQL query is correctly formatted and optimized for execution.
         - Return **only the SQL query** without any explanation or additional text.
     """)]
@@ -62,9 +58,7 @@ def generate_sql(query: str) -> str:
 def execute_query(sql_query: str) -> list:
     """Executes the SQL query and returns the result."""
     try:
-        conn = psycopg2.connect(
-            dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT
-        )
+        conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor()
         cursor.execute(sql_query)
         rows = cursor.fetchall()
@@ -104,18 +98,15 @@ And then execute those query to retrive the result.Try to provide only the neces
 if(when a message is a greeting message then only):
     if got any greeting message please greet and ask how can i help you? or Im an sql query agent to help you for getting your desire query answer without any sql query writing.
 
-- customers (customer_id, first_name, last_name, email, phone)
-- products (product_id, transaction_id, date, product_category, product_name, units_sold, unit_price, total_revenue, region, payment_method)
-- sales (sale_id, customer_id, product_id, amount, sale_date)
+- sales_data (Transaction ID, Date, Product Category, Product Name, Units Sold, Unit Price, Total Revenue, Region, Payment Method)
 
-Relationships:
-- sales.customer_id -> customers.customer_id
-- sales.product_id -> products.product_id
+Instruction: 
+When writing MySQL queries, always use backticks (`) instead of double quotes (") for column and table names, especially if they contain spaces or special characters.
+Key Points:Use backticks (column_name) for column names with spaces or special characters.
 
 Query Requirements:
 - If retrieving data from a single table, include **all columns** from that table.
-- Always include `customers.first_name` and `customers.last_name` for customer-related queries.
-- Always include `products.name`, `products.price`, and `products.category` for product-related queries.
+- Always include `Product Category`, `Product Name`, `Units Sold`, `Unit Price` for product-related queries.
 - Ensure the SQL query is correctly formatted and optimized for execution.
 
 try not to provide sql query in your output but provide the sql query result  in a table format after executing the query
@@ -153,7 +144,8 @@ def process_query(user_query: str):
     
     return "Error: Could not generate SQL query."
 
-if __name__ == "__main__":
-    user_query = input("Enter the query:")
-    response = process_query(user_query)
-    print(response)
+# if __name__ == "__main__":
+#     # user_query = input("Enter the query:")
+#     # user_query = "get me top5 most selling products."
+#     # response = process_query(user_query)
+#     # print(response)

@@ -92,6 +92,7 @@ def fetch_sales_data(date_filter=None):
             "user": os.getenv("MYSQL_USER"),
             "password": os.getenv("MYSQL_PASSWORD"),
             "database": os.getenv("MYSQL_DATABASE"),
+            "auth_plugin":'mysql_native_password' 
         }
 
         # Connect to MySQL
@@ -244,9 +245,9 @@ def plot_sales_trends(sales_data):
                 plt.show()
 
     except json.JSONDecodeError as e:
-        print("❌ JSON Decode Error:", e)
+        print("JSON Decode Error:", e)
     except Exception as e:
-        print("❌ Unexpected Error:", e)
+        print("Unexpected Error:", e)
 
 tools = [
     Tool(
@@ -271,13 +272,6 @@ tools = [
         description=(
             "Processes sales data for the last 7 days (weekly), current month (monthly), and current year (yearly) "
             "and generates graph data points in JSON format using an LLM."
-        ),
-    ),
-    Tool(
-        name="plot_sales_trends",
-        func=plot_sales_trends,
-        description=(
-            "Plots sales trends for weekly, monthly, and yearly data based on JSON sales insights."
         ),
     )
 ]
@@ -306,14 +300,8 @@ Your objective is to fetch sales data, analyze it, and generate structured repor
    - Use the `generate_sales_report_json` tool to extract key data points and trends.  
    - Convert the processed sales insights into a structured JSON format for visualization.  
 
-4. **Plot Sales Trends**:  
-   - Use the `plot_sales_trends` tool to create visual graphs based on JSON insights.  
-   - Ensure that trends for **weekly, monthly, and yearly sales** are properly visualized.  
-
 ### **Final Output Expectations:**
-- **Text-based sales summary with key trends**  
-- **JSON formatted data points for further processing**  
-- **Graphical representation of sales trends**  
+ - **ouput format: dict [summary:**summary ,json_data:json_data]**  
 
 Now execute the workflow step by step. **Do not skip any steps.**  
 
@@ -355,15 +343,15 @@ def process_sales_analysis(csv_file):
     })
 
     if isinstance(response, dict) and "output" in response:
-        return f"📈 Sales Analysis Report:\n{response['output']}"
+       return response['output'] # return f"Sales Analysis Report:\n{response['output']}"
     
-    return "❌ Error: Could not generate the sales analysis report."
+    return "Error: Could not generate the sales analysis report."
 
 
 # Run script
-      # Read CSV as DataFrame
-if __name__ == "__main__":
-    print("🔄 Running Autonomous Sales Analysis...")
+#       # Read CSV as DataFrame
+# if __name__ == "__main__":
+#     print("Running Autonomous Sales Analysis...")
     
-    report = process_sales_analysis(csv_file)  # Pass DataFrame
-    print(report)
+#     report = process_sales_analysis(csv_file)  # Pass DataFrame
+#     print(report)

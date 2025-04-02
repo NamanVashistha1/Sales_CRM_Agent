@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from qeury_agents import process_query
+from MPR import process_sales_analysis
 
 app = Flask(__name__)
 CORS(app)
@@ -13,8 +15,21 @@ def generate_response():
     user_query = data.get("query", "")
     print("User Query:", user_query)
 
-    response = {"response": f"Received: {user_query}"}
+    response = process_query(user_query)
+    print(response)
     return jsonify(response), 200
+
+
+@app.route('/SalesSummariser', methods=['GET', 'POST'])  # Allow both GET & POST
+def sales_summariser():
+    if request.method == "GET":
+        return jsonify({"message": "Use POST method to send a query"}), 200
+
+    response = process_sales_analysis(r"flask\Online Sales Data.csv")
+    # print(response)
+    cleaned_content = response.strip('```json\n').strip("```")
+
+    return cleaned_content, 200
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
