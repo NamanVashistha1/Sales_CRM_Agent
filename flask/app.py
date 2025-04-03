@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from qeury_agents import process_query
 from MPR import process_sales_analysis
-
+from ChurnPredFile import churn_predictions
 app = Flask(__name__)
 CORS(app)
 
@@ -30,6 +30,12 @@ def sales_summariser():
     cleaned_content = response.strip('```json\n').strip("```")
 
     return cleaned_content, 200
+
+@app.route('/GetNotifications', methods=['GET', 'POST'])  # Allow both GET & POST
+def getNotification():
+    
+    response = churn_predictions()
+    return response
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

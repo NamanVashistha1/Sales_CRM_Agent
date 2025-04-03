@@ -10,7 +10,7 @@ from langchain.schema import SystemMessage, HumanMessage
 from langchain.prompts import PromptTemplate
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from prophet import Prophet
 load_dotenv()
 
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
@@ -249,6 +249,30 @@ def plot_sales_trends(sales_data):
     except Exception as e:
         print("Unexpected Error:", e)
 
+
+def forecast_yearly_sales(data_filter = None):
+    global yearly_sales  # Use global variable
+    print(type(yearly_sales))
+    forecast_data = pd.DataFrame(yearly_sales, columns=['Transaction ID','Date','Product Category','Product Name','Units Sold','Unit Price','Total Revenue','Region','Payment Method'])
+
+    # Ensure correct column names for Prophet ('ds' for date, 'y' for sales)
+    df_prophet = forecast_data.reset_index()[['Date', 'Total Revenue']]
+    df_prophet.columns = ['ds', 'y']
+
+    # Initialize and fit the model
+    model = Prophet()
+    model.fit(df_prophet)
+
+    # Create future dates for forecasting (180 days ahead)
+    future = model.make_future_dataframe(periods=180)  
+    forecast = model.predict(future)
+
+    forecast_json = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].rename(
+        columns={'ds': 'Date', 'yhat': 'Forecast', 'yhat_lower': 'Lower Bound', 'yhat_upper': 'Upper Bound'}
+    ).to_json(orient="records")
+    
+    return forecast_json
+
 tools = [
     Tool(
         name="fetch_sales_data",
@@ -273,7 +297,18 @@ tools = [
             "Processes sales data for the last 7 days (weekly), current month (monthly), and current year (yearly) "
             "and generates graph data points in JSON format using an LLM."
         ),
-    )
+    ),
+    # Tool(
+    #     name="forecast_yearly_sales",
+    #     func=forecast_yearly_sales,
+    #     description=(
+    #         "Uses Prophet to predict future yearly sales trends based on historical sales data. "
+    #         "It takes the `yearly_sales` global variable as input, fits a forecasting model, "
+    #         "and predicts future sales for the next **180 days**. "
+    #         "The output to be return must be in json format"
+    #         "Useful for long-term trend analysis and business planning."
+    #     ),
+    # )
 ]
 
 prompt_template = """
@@ -290,20 +325,24 @@ Your objective is to fetch sales data, analyze it, and generate structured repor
          'yearly_sales': [...]
      }}
      ```
-   - Ensure the fetched data is stored correctly in global variables.  
-
-2. **Analyze Sales Data (Text Report)**:  
+   - Ensure the fetched data is stored correctly in global variables. 
+    
+2. **Generate JSON Data for Graphing**:  
+   - Use the `generate_sales_report_json` tool to extract key data points and trends.  
+   - Convert the processed sales insights into a structured JSON format for visualization.  
+   
+3. **Analyze Sales Data (Text Report)**:  
    - Use the `analyze_sales_report_text` tool to generate a structured sales summary in text format.  
    - Identify key trends, insights, and any anomalies in the data.  
 
-3. **Generate JSON Data for Graphing**:  
-   - Use the `generate_sales_report_json` tool to extract key data points and trends.  
-   - Convert the processed sales insights into a structured JSON format for visualization.  
 
+
+   
 ### **Final Output Expectations:**
- - **ouput format: dict [summary:**summary ,json_data:json_data]**  
+ - **ouput format: dict [json_data: JSON Data for Graphing, summary:**Analyze Sales Data (Text Report)**  
 
-Now execute the workflow step by step. **Do not skip any steps.**  
+Now execute the workflow step by step. **Do not skip any steps & always send complete dict data asked in Output Format.** Don't stop after Step2, complete all steps also. Generate JSON Data for Graphing then respond with final output. **Strictly use all the tools and follow each step till end."
+
 
 {agent_scratchpad}
 """

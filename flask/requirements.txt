@@ -1,2 +1,9 @@
 langchain 
-langchain-openai langchain-google-genai google-generativeai langchain_community
+langchain-openai 
+langchain-google-genai 
+google-generativeai 
+langchain_community
+flask 
+flask-socketio 
+eventlet
+prophet
