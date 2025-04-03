@@ -95,7 +95,7 @@ def churn_predictions():
     churn_customers_json = churn_customers.to_dict(orient="records")
           
               
-    api_key = "AIzaSyD93Bxer9D5jsXd0nJkQUw_mf4uZN13jNc"  # Replace with your actual API key
+    api_key = ""  # Replace with your actual API key
     prompt = f"""
     You are a marketing AI expert generating personalized notifications for customers at high risk of churn.
 
