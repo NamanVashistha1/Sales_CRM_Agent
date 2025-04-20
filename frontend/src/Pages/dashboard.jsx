@@ -144,20 +144,20 @@ const handleGetNotifications = async () => {
       }
     }
 
-    // const hasRun = useRef(false);
+    const hasRun = useRef(false);
 
-    // useEffect(() => {
-    //   // console.log("Setting up interval...");
+    useEffect(() => {
+      console.log("Setting up interval...");
     
-    //   const interval = setInterval(() => {
-    //     // console.log("Calling handleGetNotifications...");
-    //     handleGetNotifications();
-    //   }, 30000);
+      const interval = setInterval(() => {
+        // console.log("Calling handleGetNotifications...");
+        handleGetNotifications();
+      }, 30000);
     
-    //   return () => {
-    //     clearInterval(interval);
-    //   };
-    // }, [handleGetNotifications]);
+      return () => {
+        clearInterval(interval);
+      };
+    }, [handleGetNotifications]);
     
 
 // Extract trends
@@ -363,7 +363,7 @@ const handleGenerate = async () => {
   setError(""); // Reset error message before fetching
 
   try {
-    // const res = await axios.post("http://localhost:5000/SalesSummariser");
+    const res = await axios.post("http://localhost:5000/SalesSummariser");
 
     // if (!res.data) {
     //   throw new Error("Server response is empty. Please try again.");
@@ -371,13 +371,13 @@ const handleGenerate = async () => {
 
     // console.log(res.data);
 
-    // const { summary, json_data } = res.data;
+    const { summary, json_data } = res.data;
 
     // Check if summary or json_data is missing OR empty
     // console.log(summary, json_data)
-    const { summary, json_data } = data1;
+    // const { summary, json_data } = data1;
     if (
-      !summary || summary==null||  // summary is empty or missing
+     // summary is empty or missing
       !json_data || Object.keys(json_data).length === 0 // json_data is empty object `{}` or missing
     ) {
       throw new Error("Received empty data. Please try again later.");
